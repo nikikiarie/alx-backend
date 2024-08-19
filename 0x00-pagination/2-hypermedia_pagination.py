@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deletion-resilient hypermedia pagination
+"""Task 2: Hypermedia pagination
 """
 
 import csv
@@ -8,14 +8,14 @@ from typing import Dict, List, Tuple
 
 
 def index_range(page: int, page_size: int) -> Tuple[int, int]:
-    """Retrieves index range from given page and page size.
+    """Retrieves the index range from a given page and page size.
     """
 
     return ((page - 1) * page_size, ((page - 1) * page_size) + page_size)
 
 
 class Server:
-    """Class to paginate a database of baby names.
+    """Server class to paginate a database of popular baby names.
     """
     DATA_FILE = "Popular_Baby_Names.csv"
 
@@ -23,49 +23,38 @@ class Server:
         self.__dataset = None
 
     def dataset(self) -> List[List]:
-        """Cached data
+        """Cached dataset
         """
         if self.__dataset is None:
-            with open(self.DATA_FILE) as file:
-                data = csv.reader(file)
-                d_set = [row for row in data]
-            self.__dataset = d_set[1:]
+            with open(self.DATA_FILE) as f:
+                data = csv.reader(f)
+                info = [row for row in data]
+            self.__dataset = info[1:]
 
         return self.__dataset
 
     def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
-        """Retrieves page data
+        """Retrieves a page of data.
         """
         assert type(page) == int and type(page_size) == int
         assert page > 0 and page_size > 0
-        start, end = index_range(page, page_size)
-        info = self.dataset()
-        if start > len(info):
+        a, z = index_range(page, page_size)
+        data = self.dataset()
+        if a > len(data):
             return []
-        return info[start:end]
+        return data[a:z]
 
-    def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
-        """Retrieves ipage info from index and with a
-        size.
+    def get_hyper(self, page: int = 1, page_size: int = 10) -> Dict:
+        """Retrieves information about a page.
         """
-        info = self.indexed_dataset()
-        assert index is not None and index >= 0 and index <= max(info.keys())
-        arr = []
-        info_sum = 0
-        next_index = None
-        start = index if index else 0
-        for i, item in info.items():
-            if i >= start and info_sum < page_size:
-                arr.append(item)
-                info_sum += 1
-                continue
-            if info_sum == page_size:
-                next_index = i
-                break
-        info_page = {
-            'index': index,
-            'next_index': next_index,
-            'page_size': len(arr),
-            'data': arr,
+        data = self.get_page(page, page_size)
+        a, z = index_range(page, page_size)
+        pages_sum = math.ceil(len(self.__dataset) / page_size)
+        return {
+            'page_size': len(data),
+            'page': page,
+            'data': data,
+            'next_page': page + 1 if z < len(self.__dataset) else None,
+            'prev_page': page - 1 if a > 0 else None,
+            'total_pages': pages_sum
         }
-        return info_page
