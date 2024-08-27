@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-'''Task 4: Force locale with URL parameter
+'''
+Mock logging in
 '''
 
 from typing import Dict, Union
